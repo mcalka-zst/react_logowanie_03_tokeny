@@ -1,0 +1,8 @@
+W folderze backend 
+1. Założyć plik .env
+2. Wpisać w nim 
+    SECRET_KEY=tajny_klucz
+    PORT=3000
+3. npm install dotenv - umożliwia ładowanie zmiennych środowiskowych z pliku .env
+4. npm install jsonwebtoken
+

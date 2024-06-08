@@ -1,0 +1,32 @@
+body{
+  margin: 0;
+  padding:0;
+}
+.main{
+  margin:auto;
+  margin-top:10vh;
+  width: 40%;
+  text-align: center;
+  font-size:26px;
+ 
+}
+form{
+  width: 100%;
+  text-align: center;
+
+  padding: 20px;
+  border: solid;
+}
+button{
+  cursor: pointer;
+}
+button{
+  font-size:22px
+}
+input{
+  font-size:22px;
+  max-width: 80%;
+}
+.error{
+  color:red;
+}
