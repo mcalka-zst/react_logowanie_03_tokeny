@@ -2,7 +2,16 @@ W folderze backend
 1. Założyć plik .env
 2. Wpisać w nim 
     SECRET_KEY=tajny_klucz
-    PORT=3000
+    PORT=3000 
+    oraz parametry połaczenia z bazą
 3. npm install dotenv - umożliwia ładowanie zmiennych środowiskowych z pliku .env
 4. npm install jsonwebtoken
 
+
+W folderze frontend
+1. Założyć plik .env
+2. Wpisać w nim 
+    REACT_APP_API_URL=http://localhost:8081
+3.npm install dotenv
+4. Nie trzeba wstawiac require('dotenv').config(); 
+    bo React automatycznie odczytuje zmienne środowiskowe z pliku .env, gdy używamy zmiennych, które zaczynają się od REACT_APP_

@@ -1,39 +1,57 @@
-import "../App.css";
-import { useState } from "react";
-import LoginForm from "./LoginForm";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Menu from "./Menu";
 
+const Main = ({ user }) => {
+  const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
-const Main = () => {
-  const [loggedInUser, setLoggedInUser] = useState(null);
+   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}/protected`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              /*
+              Prefiks "Bearer" jest częścią standardu autoryzacji w protokole HTTP, 
+              który informuje serwer, jak interpretować dane autoryzacyjne przekazane w nagłówku "Authorization".
+              W przypadku tokenów JWT, prefiks "Bearer" oznacza, że przesyłany jest token autoryzacyjny, 
+              który powinien być używany do uwierzytelniania użytkownika lub dostępu do chronionych zasobów.
+              Prefiks "Bearer" informuje serwer, że token przesyłany w nagłówku "Authorization" jest samym tokenem autoryzacyjnym, 
+              a nie na przykład hasłem, kluczem API lub innym rodzajem danych autoryzacyjnych.
+              W backendzie słowo "Authorization" Express normalizuje nagłówki do małych liter i tam bedzie:
+              req.headers["authorization"]
+              */
+            },
+          }
+        );
 
-  const handleLogin = (userData) => {
-    //dodajemy logikę autoryzacji, np. wysłanie danych do serwera
-    setLoggedInUser(userData);
-  };
-  const handleLogout = () => {
-    //dodać logikę wylogowywania
-    setLoggedInUser(null);
-  };
+        if (!response.ok) {
+          throw new Error("Nieautoryzowany dostęp");
+        }
+        const data = await response.json();
+        setMessage(`${data.name} ${data.surname}`);
+      } catch (error) {
+        navigate("/login");
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
-    <div className="main">
-      {loggedInUser ? (
-        <div>
-          <h3>
-            Witaj {loggedInUser.name} {loggedInUser.surname}{" "}
-          </h3>
-          <button onClick={handleLogout}>Wyloguj </button>
-        </div>
-      ) : (
-        <div>
-          <LoginForm onLogin={handleLogin} />
-        </div>
-
-        //  Renderuje komponent LoginForm.
-        //  onLogin={handleLogin} - przekazanie propsa do komponentu LoginForm.
-        //  Props o nazwie onLogin jest przypisany do funkcji handleLogin, która została zdefiniowana w komponencie App.
-        // LoginForm może przekazać dane logowania z powrotem do komponentu App, który może je przetworzyć i aktualizować stan aplikacji.
-      )}
+    <div>
+      <Menu />
+      <div id="username">Użytkownik: {message}</div>
+      <hr/>
+      <div className="main">
+      <h2>Witaj {message}!</h2>
+      <img src="/img/welcome.jpg" alt="Witaj"/>
+        
+      </div>
     </div>
   );
 };

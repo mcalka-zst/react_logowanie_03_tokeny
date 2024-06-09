@@ -1,24 +1,56 @@
-require('dotenv').config();
+// https://www.npmjs.com/package/dotenv
+//bedziemy korzystać ze zmiennych środowiskowych
+require("dotenv").config();
 const express = require("express");
 const mysql = require("mysql");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
-const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
 
 const app = express();
 const PORT = process.env.PORT || 8081; //przechowywany w zmiennych środowiskowych
 const SECRET_KEY = process.env.SECRET_KEY; //przechowywany w zmiennych środowiskowych
 
-app.use(bodyParser.json());
+// Parsowanie treści JSON
+app.use(express.json());
 
 app.use(cors());
 
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "logowanie_02_react",
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+});
+//-----------------------------------------------------------------------------
+//Middleware  to funkcja lub zestaw funkcji, które są wykonywane podczas przetwarzania żądań HTTP. 
+// Służy do modyfikowania obiektów żądania (req) i odpowiedzi (res), 
+//zakończenia cyklu żądania/odpowiedzi lub wywołania kolejnej funkcji middleware w stosie.
+//-----------------------------------------------------------------------------
+//Middleware do weryfikacji tokenów JWT - zabezpieczenie endpointów wymagających autoryzacji
+const authenticateToken = (req, res, next) => {
+  //Funkcja sprawdza, czy nagłówek authorization istnieje i jeśli tak, wyodrębnia token z tego nagłówka.
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  //Jeśli token jest null lub nie istnieje, funkcja zwraca odpowiedź 401 (Unauthorized) i przerywa dalsze przetwarzanie.
+  if (token == null) return res.sendStatus(401); //401 - unauthorized
+  //Funkcja jwt.verify  weryfikuje token przy użyciu klucza SECRET_KEY.
+  jwt.verify(token, SECRET_KEY, (err, user) => {
+    if (err) return res.sendStatus(403); //403 - forbidden
+    req.user = user;
+    next(); //przekazanie kontroli do następnej funkcji middleware w stosie lub do funkcji obsługującej żądanie.
+  });
+};
+//-----------------------------------------------------------------------------
+// Chroniony endpoint
+app.get("/protected", authenticateToken, (req, res) => {
+  //Kiedy middleware authenticateToken wywołuje next(), kontrola przechodzi do funkcji (req, res) => { ... }.
+  //Funkcja ta tworzy odpowiedź w formacie JSON, która zawiera name i surname użytkownika z req.user.
+  res.json({
+    name: req.user.name,
+    surname: req.user.surname,
+  });
+  //Kiedy middleware authenticateToken wywołuje next(), kontrola przechodzi do funkcji (req, res) => { ... }.
 });
 //-----------------------------------------------------------------------------
 app.post("/login", (req, res) => {
@@ -32,7 +64,6 @@ app.post("/login", (req, res) => {
       // console.log(data[0].hashedPass);
       bcrypt.compare(req.body.password, data[0].hashedPass, (err, result) => {
         if (err) {
-          // console.error('Błąd porównywania haseł:', err);
           return res.status(500).json({
             success: false,
             message: "Błąd porównywania haseł",
@@ -50,8 +81,8 @@ app.post("/login", (req, res) => {
           );
           return res.json({ token });
         } else
-          return res.status
-            .apply(401)
+          return res
+            .status(401)
             .json({ success: false, message: "Błędne hasło!" });
       });
     } else
@@ -68,7 +99,8 @@ app.post("/register", (req, res) => {
       return res.status(500).json({ success: false, message: "Błąd serwera" });
     }
     if (data.length > 0) {
-      return res.status(409).json({ //409 - konflikt
+      return res.status(409).json({
+        //409 - konflikt
         success: false,
         message: "Taki użytkownik już istnieje!",
       });
@@ -77,14 +109,20 @@ app.post("/register", (req, res) => {
     // Haszowanie hasła
     bcrypt.hash(password, 10, (err, hashedPass) => {
       if (err) {
-        return res.status(500).json({ success: false, message: "Błąd haszowania hasła" });
+        return res
+          .status(500)
+          .json({ success: false, message: "Błąd haszowania hasła" });
       }
 
       // Wstawienie nowego użytkownika do bazy danych
-      sql = "INSERT INTO data (user, hashedPass, name, surname) VALUES (?, ?, ?, ?)";
+      sql =
+        "INSERT INTO data (user, hashedPass, name, surname) VALUES (?, ?, ?, ?)";
       db.query(sql, [user, hashedPass, name, surname], (err) => {
         if (err) {
-          return res.status(500).json({ success: false, message: "Wystąpił błąd przy rejestracji" });
+          return res.status(500).json({
+            success: false,
+            message: "Wystąpił błąd przy rejestracji",
+          });
         } else {
           return res.status(201).json({
             success: true,
@@ -95,31 +133,13 @@ app.post("/register", (req, res) => {
     });
   });
 });
+//Globalny middleware do obsługi błędów
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send("Coś poszło nie tak!");
+});
+
 //-------------------------------------------------------------------
 app.listen(PORT, () => {
   console.log(`Nasłuchuję na porcie ${PORT}...`);
-});
-
-//Middleware do weryfikacji tokenów JWT
-//Zabezpieczenie endpointów wymagających autoryzacji
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (token == null) return res.sendStatus(401);
-
-  jwt.verify(token, SECRET_KEY, (err, user) => {
-    if (err) return res.sendStatus(403);
-    req.user = user;
-    next();
-  });
-};
-
-// Przykład chronionego endpointu
-app.get('/protected', authenticateToken, (req, res) => {
-  res.send('This is protected content');
-});
-
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Coś poszło nie tak!');
 });

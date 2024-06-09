@@ -1,9 +1,8 @@
-import { useState} from "react";
-import { Link, redirect } from "react-router-dom";
-import bcrypt from 'bcryptjs';
+import { useState, useEffect} from "react";
+import { Link} from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
 
-const RegisterForm = () => {
+const Register = () => {
     const [error, setError] = useState('')
     const [user, setUser] = useState('');
     const [name, setName] = useState('');
@@ -12,20 +11,25 @@ const RegisterForm = () => {
     const [password2, setPassword2] = useState('');
  
     const navigate = useNavigate();
+    useEffect(()=>{
+        if(localStorage.getItem('token')){
+        navigate('/main');
+        }
+    })
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-       
+
         // Wysyłamy zapytanie do bazy danych, aby sprawdzić istnienie użytkownika i pobrać imię i nazwisko
         try {
             if(password!==password2) throw new Error("Hasła nie zgadzają się");
-            const hashedPass = await bcrypt.hash(password, 10); //10 koszt hashowania
-            const response = await fetch('http://localhost:8081/register',
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/register`,
                 {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({user, hashedPass, name, surname }),
+                    body: JSON.stringify({user, password, name, surname }),
                 });
             if (response.ok) {
                 const res = await response.json();
@@ -40,7 +44,7 @@ const RegisterForm = () => {
             }
         }
         catch (err) {
-            setError('Wystąpił błąd: \n'+ err);
+            setError('Wystąpił błąd: \n'+ err.message);
         }
 
     };
@@ -77,4 +81,4 @@ const RegisterForm = () => {
     )
 
 }
-export default RegisterForm;
+export default Register;

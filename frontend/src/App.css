@@ -4,8 +4,8 @@ body{
 }
 .main{
   margin:auto;
-  margin-top:10vh;
-  width: 40%;
+  margin-top:5vh;
+  width: 60%;
   text-align: center;
   font-size:26px;
  
@@ -27,6 +27,31 @@ input{
   font-size:22px;
   max-width: 80%;
 }
+
+#menu li{
+  display:inline-block;
+  margin:2px;
+  background-color: bisque;
+  padding: 5px 10px;
+  
+
+}
+li a{
+  text-decoration: none;
+}
+#menu{
+  text-align: right;
+  margin: 10px;
+}
+#username{
+  text-align: right;
+  color:brown;
+  margin: 0 10px;
+}
+p{
+  text-align: justify;
+}
 .error{
   color:red;
+  text-align: center;
 }

@@ -1,18 +1,25 @@
-import { useState} from "react";
+import { useEffect, useState} from "react";
 import { Link } from "react-router-dom";
-// import bcrypt from 'bcryptjs';
+import { useNavigate } from 'react-router-dom';
 
-const LoginForm = ({ onLogin }) => {
+const Login = ({ onLogin }) => {
     const [error, setError] = useState('')
     const [user, setUser] = useState('');
     const [password, setPassword] = useState('');
- 
+    const navigate = useNavigate();
+
+    useEffect(()=>{
+        if(localStorage.getItem('token')){
+        navigate('/main');
+        }
+    })
+
+    
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // Wysyłamy zapytanie do bazy danych, aby sprawdzić istnienie użytkownika i pobrać imię i nazwisko
+        // Wysyłamy zapytanie do bazy danych, aby sprawdzić istnienie użytkownika oraz pobrać imię i nazwisko
         try {
-            // const hashedPass = await bcrypt.hash(password, 10); //10 koszt hashowania
-            const response = await fetch('http://localhost:8081/login',
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/login`,
                 {
                     method: 'POST',
                     headers: {
@@ -22,13 +29,18 @@ const LoginForm = ({ onLogin }) => {
                 });
             if (response.ok) {
                 const res = await response.json();
-                console.log(res); 
-                if(res.success){
-                    onLogin({ name: res.name, surname: res.surname })              
+                // console.log(res); 
+                if(res.token){
+                    localStorage.setItem('token', res.token);
+                    onLogin({ name: res.name, surname: res.surname }) ;
+                    navigate('/main');            
                 }
                 else{
                     setError(res.message);
                 }
+               
+            } else{
+                 setError('Błędne dane logowania.');   
             }
         }
         catch (err) {
@@ -37,6 +49,7 @@ const LoginForm = ({ onLogin }) => {
 
     };
     return (
+        <div className="main">
         <form onSubmit={handleSubmit}>
             <label>
                 Login:<br />
@@ -51,7 +64,8 @@ const LoginForm = ({ onLogin }) => {
             <p className="error">{error}</p>
             <Link to="/register">Zarejestruj</Link>
         </form>
+        </div>
     )
 
 }
-export default LoginForm;
+export default Login;
