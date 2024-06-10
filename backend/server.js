@@ -133,7 +133,9 @@ app.post("/register", (req, res) => {
     });
   });
 });
-//Globalny middleware do obsługi błędów
+//Globalny middleware do obsługi błędów. przechwytuje wszelkie błędy, które mogą wystąpić podczas przetwarzania żądania, i obsługuje je w jednolity sposób. 
+//Tego typu middleware umieszcza się na końcu listy middleware, aby przechwytywał błędy z innych części aplikacji.
+//Ten middleware zostanie wywołany automatycznie, gdy jakikolwiek inny middleware lub trasa wywoła next(err), przekazując obiekt błędu do next.
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send("Coś poszło nie tak!");
